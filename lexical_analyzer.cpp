@@ -84,7 +84,7 @@ int main()
 	cout << setw(15) << "LEXICAL ANALYSER FOR" << endl
 		 << "-------------------  C LANGUAGE -------------------" << endl
 		 << "enter expression:" << endl;
-	cin >> string_input;
+	getline(cin, string_input);
 	int n = string_input.length();
 	for (int i = 0; i < n; i++)
 	{
