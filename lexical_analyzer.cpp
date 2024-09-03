@@ -7,13 +7,6 @@ using namespace std;
 string sym_table[100][3];
 int m = 0; // number of rows
 
-// 2nd column of the sym_table is the type in the symbol table.
-// op -> operator
-// id -> identifier
-// int -> int (handles negative???)
-// float -> float
-// keyword -> keyword
-
 void feed_in_table(string str, int count, string sym_type)
 {
 	int index, flag_in_tab = 0;
@@ -38,17 +31,21 @@ void feed_in_table(string str, int count, string sym_type)
 	}
 	if (sym_type == "keyword")
 		cout << "<" << sym_table[index][2] << "," << sym_table[index][0] << ">";
-	if (sym_type == "op" || sym_type == "int")
+	else if (sym_type == "op" || sym_type == "int" || sym_type == "float")
+	{
 		cout << "<" << sym_table[index][0] << ">";
-	if (sym_type == "id")
+		if (str == ";" || str == "}" || str == ")")
+			cout << endl;
+	}
+	else if (sym_type == "id")
+	{
 		cout << "<id" << sym_table[index][1] << "," << sym_table[index][0] << ">";
-	if (sym_table[index][0] == ")" || sym_table[index][0] == "}" || sym_table[index][0] == ";")
-		cout << endl;
+	}
 }
 
 int is_operator_func(char input)
 {
-	char operator_arr[25] = {'+', '-', '/', '*', '=', '>', '<', '!', '&', '|', '^', ',', '.', ':', '"', '%', '~', '}', '{', '(', ')', ';'};
+	char operator_arr[30] = {'+', '-', '/', '*', '=', '>', '<', '!', '&', '|', '^', ',', '.', ':', '\"', '%', '~', '}', '{', '(', ')', ';', '\'', '[', ']'};
 	for (char op : operator_arr)
 	{
 		if (input == op) // checks for operator
@@ -67,7 +64,7 @@ int is_keyword_func(string input)
 							   "friend", "inline", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
 							   "operator", "private", "protected", "public", "reinterpret_cast", "static_assert", "static_cast",
 							   "template", "this", "thread_local", "throw", "try", "typeid", "typename", "using", "virtual",
-							   "wchar_t", "xor", "xor_eq"};
+							   "wchar_t", "xor", "xor_eq", "true", "false"};
 	for (string key : keyword_arr)
 	{
 		if (input == key) // checks for operator
@@ -76,14 +73,44 @@ int is_keyword_func(string input)
 	return 0;
 }
 
+bool is_integer(string str)
+{
+	for (char c : str)
+	{
+		if (!isdigit(c))
+			return false;
+	}
+	return true;
+}
+
+bool is_float(const string &str)
+{
+	int dot_count = 0;
+	for (char c : str)
+	{
+		if (c == '.')
+		{
+			dot_count++;
+			if (dot_count > 1)
+				return false; // More than one dot is invalid
+		}
+		else if (!isdigit(c))
+		{
+			return false; // Invalid character for float
+		}
+	}
+	return dot_count == 1; // Must have exactly one dot
+}
+
 int main()
 {
 	string string_input, check_string, string_passed, input_line;
-	int op_count = 1, id_count = 1, keyword_count = 1, next;
+	int op_count = 1, id_count = 1, keyword_count = 1, lit_count = 1, next;
 	// is_op = 0, is_alphabet = 0,
-	cout << setw(15) << "LEXICAL ANALYSER FOR" << endl
+	cout << setw(35) << "LEXICAL ANALYSER FOR" << endl
 		 << "-------------------  C LANGUAGE -------------------" << endl
-		 << "Enter Code, type 'EOF' to stop:" << endl;
+		 << "Enter Code, type 'EOF' to stop:" << endl
+		 << "--------------------------------------------------------------------------------------------------" << endl;
 	// getline(cin, string_input);
 	while (getline(cin, input_line) && input_line != "EOF")
 	{
@@ -91,21 +118,41 @@ int main()
 	}
 	int n = string_input.length();
 
-	cout << endl
-		 << "LEXICAL ANALYSIS PHASE:" << endl;
+	cout << "--------------------------------------------------------------------------------------------------" << endl
+		 << "LEXICAL ANALYSIS PHASE (TOKENS):" << endl
+		 << endl;
 	for (int i = 0; i < n; i++)
 	{
 		if (is_operator_func(string_input[i]) == 1) // operator
 		{
 			string_passed = string_input[i];
 			next = i + 1;
-			if (string_input[next] == string_input[i]) // is increment or decrement or double equal for checking stuff in an if loop
+			if (next < n && (string_input[next] == string_input[i]) &&
+				(string_input[i] == '+' || string_input[i] == '-' || string_input[i] == '=')) // is increment or decrement or double equal for checking stuff in an if loop
 			{
 				string_passed += string_input[next];
 				i++; // skips string_input[next]
 			}
 			feed_in_table(string_passed, op_count, "op");
 			op_count++;
+		}
+		else if (isdigit(string_input[i])) // numbers or more specifically literals
+		{
+			string_passed = "";
+
+			while (isdigit(string_input[i]) || string_input[i] == '.')
+			{
+				string_passed += string_input[i];
+				i++;
+			}
+			i--;
+			if (is_float(string_passed))
+				feed_in_table(string_passed, lit_count, "float");
+			else if (is_integer(string_passed))
+				feed_in_table(string_passed, lit_count, "int");
+			else
+				cout << "<Invalid number literal: " << string_passed << ">";
+			lit_count++;
 		}
 		else if (isalpha(string_input[i])) // an identifer or keyword
 		{
@@ -141,13 +188,34 @@ int main()
 			continue;
 		}
 	}
-	cout << endl
-		 << "SYMBOL TABLE: \n --------------------";
+	cout << "--------------------------------------------------------------------------------------------------" << endl
+		 << "SYMBOL TABLE:" << endl
+		 << "------------------------------------------" << endl
+		 << setw(15) << "Name" << " | " << setw(22) << "Type" << " |" << endl
+		 << "------------------------------------------";
+
 	for (int i = 0; i < m; i++)
 	{
-		cout << endl
-			 << setw(10) << sym_table[i][0] << " | " << setw(10) << sym_table[i][2] << sym_table[i][1] << " | ";
+		if (sym_table[i][2] == "int")
+		{
+			cout << endl
+				 << setw(15) << sym_table[i][0] << " | " << setw(15) << "literal " << sym_table[i][1] << " (" << sym_table[i][2] << ")" << " |";
+		}
+		else if (sym_table[i][2] == "float")
+		{
+			{
+				cout << endl
+					 << setw(15) << sym_table[i][0] << " | " << setw(13) << "literal " << sym_table[i][1] << " (" << sym_table[i][2] << ")" << " |";
+			}
+		}
+		else
+		{
+			cout << endl
+				 << setw(15) << sym_table[i][0] << " | " << setw(20) << sym_table[i][2] << " " << sym_table[i][1] << " |";
+		}
 	}
+	cout << endl
+		 << "--------------------------------------------------------------------------------------------------" << endl;
 	_getch();
 	return 0;
 }
