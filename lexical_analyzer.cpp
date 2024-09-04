@@ -6,24 +6,40 @@
 using namespace std;
 
 string sym_table[100][3];
-int m = 0, op_count = 1, id_count = 1, keyword_count = 1, lit_count = 1, relop_count = 1, delimiter_count = 1, next; // number of rows
+int m = 0, op_count = 1, id_count = 1, keyword_count = 1, lit_count = 1, relop_count = 1, delimiter_count = 1; // number of rows
 
-void handleCount(string sym_type)
+int handleCount(string sym_type)
 {
 	int count;
 	if (sym_type == "keyword")
 		count = keyword_count++;
 	else if (sym_type == "op")
-		op_count++;
+		count = op_count++;
 	else if (sym_type == "float" || sym_type == "int")
-		lit_count++;
+		count = lit_count++;
 	else if (sym_type == "relop")
-		relop_count++;
+		count = relop_count++;
 	else if (sym_type == "delimiter")
-		delimiter_count++;
+		count = delimiter_count++;
 	else if (sym_type == "id")
-		id_count++;
+		count = id_count++;
+	return count;
 }
+
+void print_token(int index, const string& type, const string& str)
+{
+	if (type == "keyword")
+		cout << "< " << sym_table[index][2] << "," << sym_table[index][0] << " > ";
+	else if (type == "id")
+		cout << "< id," << sym_table[index][1] << " > ";
+	else
+		cout << "< " << sym_table[index][0] << " > ";
+
+	if (str == ";" || str == "}" || str == ")")
+		cout << endl;
+}
+
+
 void feed_in_table(string str, string sym_type)
 {
 	int index, flag_in_tab = 0;
@@ -41,76 +57,58 @@ void feed_in_table(string str, string sym_type)
 	if (flag_in_tab == 0)
 	{
 		sym_table[m][0] = str;
-		sym_table[m][1] = to_string(count);
+		sym_table[m][1] = to_string(handleCount(sym_type));
 		sym_table[m][2] = sym_type;
 		index = m;
 		m++;
-		handleCount(sym_table[m][2]);
 	}
-	if (sym_type == "keyword")
-		cout << "<" << sym_table[index][2] << "," << sym_table[index][0] << ">";
-	else if (sym_type == "op" || sym_type == "int" || sym_type == "float" || sym_type == "relop" || sym_type == "delimiter")
-	{
-		cout << "<" << sym_table[index][0] << ">";
-		if (str == ";" || str == "}" || str == ")")
-			cout << endl;
-	}
-	else if (sym_type == "id")
-	{
-		cout << "<id" << sym_table[index][1] << "," << sym_table[index][0] << ">";
-	}
+
+	print_token(index, sym_type, str);
 }
 
-int is_operator_func(char input)
+bool is_operator_func(char input)
 {
-	char operator_arr[30] = { '+', '-', '/', '*', '=', '!', '&', '|', '^', '.', ':', '\"', '%', '~', '[', ']', '>','<',';',',','\'','"','(',')','{','}' };
+	char operator_arr[30] = { '+', '-', '/', '*', '=', '!', '&', '|', '^', '.', ':', '\"', '%', '~', '[', ']', '>','<',';',',','\'','"','(',')','{','}','#' };
 	for (char op : operator_arr)
 	{
 		if (input == op) // checks for operator
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
-int is_relop_func(string input)
+
+bool is_relop_func(string input)
 {
-	string rel_operator_arr[30] = {"==", "!=", "<=", ">="};
+	string rel_operator_arr[] = { "==", "!=", "<=", ">=" };
 	for (string relop : rel_operator_arr)
 	{
 		if (input == relop) // checks for relational operator
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 
-int is_delimiter_func(string input)
+bool is_delimiter_func(string input)
 {
-	string delimiter_arr[30] = {"/*","*/","//" };
-	for (string delimiter: delimiter_arr)
+	string delimiter_arr[] = { "/*","*/","//" };
+	for (string delimiter : delimiter_arr)
 	{
 		if (input == delimiter) // checks for operator
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 
 
-int is_keyword_func(string input)
+bool is_keyword_func(string input)
 {
-	string keyword_arr[900] = { "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else",
-		"enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return",
-		"short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned",
-		"void", "volatile", "while", "alignas", "alignof", "and", "and_eq", "asm", "bitand", "bitor",
-		"class", "compl", "concept", "const_cast", "delete", "dynamic_cast", "explicit", "export",
-		"friend", "inline", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr",
-		"operator", "private", "protected", "public", "reinterpret_cast", "static_assert", "static_cast",
-		"template", "this", "thread_local", "throw", "try", "typeid", "typename", "using", "virtual",
-		"wchar_t", "xor", "xor_eq", "true", "false" };
+	string keyword_arr[120] = { "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else","enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return","short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned","void", "volatile", "while", "alignas", "alignof", "and", "and_eq", "asm", "bitand", "bitor","class", "compl", "concept", "const_cast", "delete", "dynamic_cast", "explicit", "export","friend", "inline", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr","operator", "private", "protected", "public", "reinterpret_cast", "static_assert", "static_cast","template", "this", "thread_local", "throw", "try", "typeid", "typename", "using", "virtual","wchar_t", "xor", "xor_eq", "true", "false", "include","printf","main", "stdio.h", "stdlib.h", "string.h", "math.h", "ctype.h", "time.h", "errno.h", "assert.h", "limits.h", "float.h", "stddef.h", "stdarg.h", "stdbool.h", "signal.h", "setjmp.h", "locale.h", "unistd.h", "sys/types.h", "sys/stat.h", "sys/wait.h", "pthread.h", "windows.h", "io.h"};
 	for (string key : keyword_arr)
 	{
 		if (input == key) // checks for operator
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 
 bool is_integer(string str)
@@ -144,10 +142,11 @@ bool is_float(const string &str)
 
 int main()
 {
-	string string_input, check_string, string_passed, input_line,newstring;
+	string string_input, check_string, string_passed, input_line, newstring;
+	int next;
 	// is_op = 0, is_alphabet = 0,
-	cout << setw(35) << "LEXICAL ANALYSER FOR" << endl
-		<< "-------------------  C LANGUAGE -------------------" << endl
+	cout << setw(60) << "LEXICAL ANALYSER FOR" << endl
+		<< "------------------------------------------- C LANGUAGE -------------------------------------------" << endl
 		<< "Enter Code, type 'EOF' to stop:" << endl
 		<< "--------------------------------------------------------------------------------------------------" << endl;
 	// getline(cin, string_input);
@@ -162,28 +161,31 @@ int main()
 		<< endl;
 	for (int i = 0; i < n; i++)
 	{
-		if (is_operator_func(string_input[i]) == 1) // operators and relational operator
+		if (is_operator_func(string_input[i])) // operators and relational operator
 		{
 			string_passed = string_input[i];
 			next = i + 1;
 			int is_relop = 0, is_delimiter = 0;
+
+			//increment decrement checker 
 			if (next < n && (string_input[next] == string_input[i]) &&
 				(string_input[i] == '+' || string_input[i] == '-')) // is increment or decrement or double equal for checking stuff in an if loop
 			{
 				string_passed += string_input[next];
 				i++; // skips string_input[next]
 			}
+			//relational operator cgecker 
 			else if (next < n && (string_input[i] == '>' || string_input[i] == '<' || string_input[i] == '!' || string_input[i] == '='))
 			{
 				newstring = string_passed + string_input[next];
+				is_relop = 1;
 				if (is_relop_func(newstring))
 				{
 					i++;  string_passed = newstring;
 				}
-				is_relop = 1;
-
 			}
-			else if (next < n && (string_input[i] == ';' || string_input[i] == ',' || string_input[i] == '\'' || string_input[i] == '"' || string_input[i] == '(' || string_input[i] == ')' || string_input[i] == '{' || string_input[i] == '}'))
+			//delimitter
+			else if (next < n && (string_input[i] == ';' || string_input[i] == ',' || string_input[i] == '\'' || string_input[i] == '"' || string_input[i] == '(' || string_input[i] == ')' || string_input[i] == '{' || string_input[i] == '}' || string_input[i] == '/' || string_input[i] == '*'))
 			{
 				newstring = string_passed + string_input[next];
 				if (is_delimiter_func(newstring))
@@ -191,6 +193,11 @@ int main()
 					i++;  string_passed = newstring;
 				}
 				is_delimiter = 1;
+			}
+			//equal and 1 throwing exception and hence
+			if (string_passed == "=" || string_passed == "!")
+			{
+				feed_in_table(string_passed, "op");
 			}
 			if (is_relop == 1)
 			{
@@ -216,12 +223,11 @@ int main()
 			}
 			i--;
 			if (is_float(string_passed))
-				feed_in_table(string_passed, lit_count, "float");
+				feed_in_table(string_passed, "float");
 			else if (is_integer(string_passed))
-				feed_in_table(string_passed, lit_count, "int");
+				feed_in_table(string_passed,"int");
 			else
 				cout << "<Invalid number literal: " << string_passed << ">";
-			lit_count++;
 		}
 		else if (isalpha(string_input[i])) // an identifer or keyword
 		{
@@ -241,14 +247,13 @@ int main()
 				else
 					next_is_alphabet = 0;
 			} while (next_is_alphabet == 1);
-			if (is_keyword_func(string_passed) == 1)
+			if (is_keyword_func(string_passed))
 			{
-				feed_in_table(string_passed, keyword_count, "keyword");
+				feed_in_table(string_passed,"keyword");
 			}
 			else
 			{
-				feed_in_table(string_passed, id_count, "id");
-				id_count++;
+				feed_in_table(string_passed,"id");
 			}
 		}
 		else if (string_input[i] == ' ') // to handle whitespaces.
