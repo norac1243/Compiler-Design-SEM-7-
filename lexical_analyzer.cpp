@@ -239,11 +239,11 @@ int main()
 				string_passed += string_input[i];
 				k++;
 				next = i + 1;
-				if (isalpha(string_input[next]))
+				if (isalpha(string_input[next]) || (next + 2 < n && string_input[next] == '.' && isalpha(string_input[next + 1])))
 				{
 					next_is_alphabet = 1;
 					i++;
-				}
+				}	
 				else
 					next_is_alphabet = 0;
 			} while (next_is_alphabet == 1);
